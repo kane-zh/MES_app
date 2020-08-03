@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,user-scalable=no">
+    <title>智能工厂MES系统</title>
+    <style>
+        /* http://meyerweb.com/eric/tools/css/reset/
+        v2.0 | 20110126
+        License: none (public domain)
+       */
+      html, body, div, span, applet, object, iframe,
+      h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+      a, abbr, acronym, address, big, cite, code,
+      del, dfn, em, img, ins, kbd, q, s, samp,
+      small, strike, strong, sub, sup, tt, var,
+      b, u, i, center,
+      dl, dt, dd, ol, ul, li,
+      fieldset, form, label, legend,
+      table, caption, tbody, tfoot, thead, tr, th, td,
+      article, aside, canvas, details, embed,
+      figure, figcaption, footer, header, hgroup,
+      menu, nav, output, ruby, section, summary,
+      time, mark, audio, video {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        font-size: 100%;
+        font: inherit;
+        vertical-align: baseline;
+      }
+      /* HTML5 display-role reset for older browsers */
+      article, aside, details, figcaption, figure,
+      footer, header, hgroup, menu, nav, section {
+        display: block;
+      }
+      body {
+        line-height: 1;
+      }
+      ol, ul {
+        list-style: none;
+      }
+      blockquote, q {
+        quotes: none;
+      }
+      blockquote:before, blockquote:after,
+      q:before, q:after {
+        content: '';
+        content: none;
+      }
+      table {
+        border-collapse: collapse;
+        border-spacing: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <!-- built files will be auto injected -->
+  </body>
+  <script>
+    document.addEventListener('plusready', function () {
+      var first = null;
+      var webview = plus.webview.currentWebview();
+      plus.key.addEventListener('backbutton', function () {
+        webview.canBack(function (e) {
+          // if (e.canBack) {
+          //   webview.back(); //这里不建议修改自己跳转的路径
+          // } else {
+            //首次按键，提示‘再按一次退出应用’
+            if (!first) {
+              first = new Date().getTime(); //获取第一次点击的时间戳
+              plus.nativeUI.toast("再按一次退出应用", {
+                duration: 'short'
+              }); //通过H5+ API 调用Android 上的toast 提示框
+              setTimeout(function () {
+                first = null;
+              }, 1000);
+            } else {
+              // 获取第二次点击的时间戳, 两次之差 小于 1000ms 说明1s点击了两次,
+              if (new Date().getTime() - first < 1000) {
+                plus.runtime.quit(); //退出应用
+              }
+            }
+          // }
+        })
+      });
+    });
+  </script>
+</html>
