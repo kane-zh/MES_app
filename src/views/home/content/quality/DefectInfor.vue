@@ -17,7 +17,7 @@
         </div>
       </div>
       <div class="search" v-show="showSearchView===true">
-               <div>创建账号:
+          <div>创建账号:
             <select v-model="selectItem.create_user">
               <option selected hidden disabled value="">请选择创建账号</option>
               <option v-for="item in userInfor" :value="item.username" :key="item.username">{{item.username}}</option>
@@ -27,6 +27,12 @@
             <select v-model="selectItem.auditor">
               <option selected hidden disabled value="">请选择审核账号</option>
               <option v-for="item in userInfor" :value="item.username" :key="item.username">{{item.username}}</option>
+            </select>
+          </div>
+          <div>类型:
+            <select v-model="selectItem.type">
+              <option selected hidden disabled value="">请选择类型</option>
+              <option v-for="item in typeInfor" :value="item.id" :key="item.id">{{item.name+"("+item.code+")"}}</option>
             </select>
           </div>
           <div>状态:
@@ -226,6 +232,7 @@ export default {
         state: '',
         create_user: '',
         auditor: '',
+        type: '',
         searchValue: ''
       },
       /* 列表页数据排序 */
@@ -303,6 +310,7 @@ export default {
       this.$axios.get('quality/defectInfor/?state=' + self.selectItem.state +
               '&auditor=' + self.selectItem.auditor +
               '&create_user=' + self.selectItem.create_user +
+              '&type=' + self.selectItem.type +
               '&search=' + self.selectItem.searchValue +
               '&ordering=' + self.ordering).then(function (response) {
         self.list = response.data.results

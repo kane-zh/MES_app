@@ -17,7 +17,7 @@
         </div>
       </div>
       <div class="search" v-show="showSearchView===true">
-               <div>创建账号:
+          <div>创建账号:
             <select v-model="selectItem.create_user">
               <option selected hidden disabled value="">请选择创建账号</option>
               <option v-for="item in userInfor" :value="item.username" :key="item.username">{{item.username}}</option>
@@ -29,8 +29,14 @@
               <option v-for="item in userInfor" :value="item.username" :key="item.username">{{item.username}}</option>
             </select>
           </div>
+          <div>类型:
+            <select v-model="selectItem.type">
+              <option selected hidden disabled value="">请选择类型</option>
+              <option v-for="item in typeInfor" :value="item.id" :key="item.id">{{item.name+"("+item.code+")"}}</option>
+            </select>
+          </div>
           <div>状态:
-                   <select v-model="selectItem.state" >
+            <select v-model="selectItem.state" >
               <option selected hidden disabled value="">请选择状态</option>
               <option value="新建">新建</option>
               <option value="审核中">审核中</option>
@@ -71,8 +77,8 @@
               <span class="type">{{item.type}}</span>
             </div>
             <div class="content">
-              <span class="warehousename">仓库:{{"【"+item.parent.name+"】"}}</span>
-              <span class="warehousecode">{{item.parent.code}}</span>
+              <span class="warehousename">仓库:{{"【"+item.type.name+"】"}}</span>
+              <span class="warehousecode">{{item.type.code}}</span>
               <span class="place">位置{{item.place}}</span>
               <span class="maximum">最大容量{{item.maximum}}</span>
               <span class="create">创建账号:{{item.create_user}}</span>
@@ -105,9 +111,9 @@
             <span class="name">状态:</span>
             <span class="code">{{detail.state}}</span>
           </div>
-<!--          <li>{{"仓库名称:"+"&#12288;"+parent.name}}</li>-->
-<!--          <li>{{"仓库编码::"+"&#12288;"+parent.code}}</li>-->
-<!--          <li>{{"仓库:状态:"+"&#12288;"+parent.state}}</li>-->
+<!--          <li>{{"仓库名称:"+"&#12288;"+type.name}}</li>-->
+<!--          <li>{{"仓库编码::"+"&#12288;"+type.code}}</li>-->
+<!--          <li>{{"仓库:状态:"+"&#12288;"+type.state}}</li>-->
           <div >
             <span class="name">最大容量:</span>
             <span class="code">{{detail.maximum}}</span>
@@ -215,12 +221,13 @@ export default {
       listCount: 0,
       listNextUrl: '',
       listScroll: null,
-      parent: null,
+      type: null,
       /* 列表页查询参数 */
       selectItem: {
         state: '',
         create_user: '',
         auditor: '',
+        type: '',
         searchValue: ''
       },
       /* 列表页数据排序 */
@@ -294,6 +301,7 @@ export default {
       this.$axios.get('warehouse/position/?state=' + self.selectItem.state +
               '&auditor=' + self.selectItem.auditor +
               '&create_user=' + self.selectItem.create_user +
+              '&type=' + self.selectItem.type +
               '&search=' + self.selectItem.searchValue +
               '&ordering=' + self.ordering).then(function (response) {
         self.list = response.data.results
@@ -350,12 +358,12 @@ export default {
     showDetailView (id) {
       this.detail = [] // 清空详情数据
       this.alterData = []// 清空审核数据
-      this.parent = {}
+      this.type = {}
       var self = this
       this.$axios.get(`warehouse/position/` + id).then(function (response) {
         self.detail = response.data
-        self.parent = self.detail.parent
-        // self.formItem.parent = self.detail.parent.id
+        self.type = self.detail.type
+        // self.formItem.type = self.detail.type.id
         self.showViewid = 'detail'
       }).catch(function (err) {
         if (err.request) {

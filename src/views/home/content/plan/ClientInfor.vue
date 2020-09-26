@@ -29,8 +29,14 @@
               <option v-for="item in userInfor" :value="item.username" :key="item.username">{{item.username}}</option>
             </select>
           </div>
+          <div>类型:
+            <select v-model="selectItem.type">
+              <option selected hidden disabled value="">请选择类型</option>
+              <option v-for="item in typeInfor" :value="item.id" :key="item.id">{{item.name+"("+item.code+")"}}</option>
+            </select>
+          </div>
           <div>状态:
-                   <select v-model="selectItem.state" >
+            <select v-model="selectItem.state" >
               <option selected hidden disabled value="">请选择状态</option>
               <option value="新建">新建</option>
               <option value="审核中">审核中</option>
@@ -241,6 +247,7 @@ export default {
         state: '',
         create_user: '',
         auditor: '',
+        type: '',
         searchValue: ''
       },
       /* 列表页数据排序 */
@@ -315,6 +322,7 @@ export default {
       this.$axios.get('plan/clientInfor/?state=' + self.selectItem.state +
               '&auditor=' + self.selectItem.auditor +
               '&create_user=' + self.selectItem.create_user +
+              '&type=' + self.selectItem.type +
               '&search=' + self.selectItem.searchValue +
               '&ordering=' + self.ordering).then(function (response) {
         self.list = response.data.results
