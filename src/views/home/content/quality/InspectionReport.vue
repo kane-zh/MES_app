@@ -1,9 +1,9 @@
 <template>
-  <div class="inspectionRecord">
+  <div class="inspectionReport">
     <!-- 列表页显示-->
     <div  class="list"  v-show="showViewid==='list'">
       <div class="title">
-        <span>检验记录</span>
+        <span>检验汇报</span>
         <button id="add" @click="showCreatView" v-show="showSearchView===false">
           <img  height=100% src="../../../../../static/icon/add.png"/>
         </button>
@@ -99,7 +99,7 @@
     <!--   /*详情页显示*/-->
     <div  class="detail"  v-show="showViewid==='detail'">
       <div class="title">
-        <span>检验记录详情</span>
+        <span>检验汇报详情</span>
         <div class="button" >
           <button @click="showViewid='list'" >
             <img  height=100% src="../../../../../static/icon/undo.png"/>
@@ -250,7 +250,7 @@
     <!--    /*创建页显示*/-->
     <div  class="create"  v-show="showViewid==='create'">
       <div class="title">
-        <span>添加检验记录</span>
+        <span>添加检验汇报</span>
         <div class="button" >
           <button @click="showViewid='list'" >
             <img  height=100% src="../../../../../static/icon/undo.png"/>
@@ -258,11 +258,11 @@
         </div>
       </div>
       <form   ref="createForm" >
-        <div>检验记录名称:
-          <input v-model="formItem.name"  placeholder="请输入检验记录名称:...">
+        <div>检验汇报名称:
+          <input v-model="formItem.name"  placeholder="请输入检验汇报名称:...">
         </div>
-        <div>检验记录编码:
-          <input v-model="formItem.code"  placeholder="请输入检验记录编码:...">
+        <div>检验汇报编码:
+          <input v-model="formItem.code"  placeholder="请输入检验汇报编码:...">
         </div>
         <div>类型：
           <select v-model="formItem.type"   placeholder="请选择类型：">
@@ -395,11 +395,11 @@
     <!--    /*更新页显示*/-->
     <div  class="update"  v-show="showViewid==='update'">
       <form   ref="updateForm"  >
-        <div>检验记录名称:
-          <input v-model="formItem.name"  placeholder="请输入检验记录名称:...">
+        <div>检验汇报名称:
+          <input v-model="formItem.name"  placeholder="请输入检验汇报名称:...">
         </div>
-        <div>检验记录编码:
-          <input v-model="formItem.code"  placeholder="请输入检验记录编码:...">
+        <div>检验汇报编码:
+          <input v-model="formItem.code"  placeholder="请输入检验汇报编码:...">
         </div>
         <div>类型：
           <select v-model="formItem.type"   placeholder="请选择类型：">
@@ -425,7 +425,7 @@
           <input v-model="formItem.result"  placeholder="请输入检验结果...">
         </div>
         <div>抽检者:
-          <input v-model="formItem.handler"  placeholder="请输入检验记录编码:...">
+          <input v-model="formItem.handler"  placeholder="请输入检验汇报编码:...">
         </div>
         <div>抽检时间:
           <input v-model="formItem.dataTime"  type="datetime-local" placeholder="选择日期和时间" >
@@ -541,7 +541,7 @@
 <script>
 
 export default {
-  name: 'inspectionRecord',
+  name: 'inspectionReport',
   components: {
 
   },
@@ -576,7 +576,7 @@ export default {
       /* 详情页审核记录项表单 */
       alterItem: {
         desc: '',
-        uri: 'inspectionRecord'
+        uri: 'inspectionReport'
       },
       alterList: [],
       alterData: [],
@@ -630,7 +630,7 @@ export default {
         file: null,
         fileName: '',
         desc: '',
-        uri: 'inspectionRecord'
+        uri: 'inspectionReport'
       },
       fileData: [],
       typeInfor: [],
@@ -660,7 +660,7 @@ export default {
         this.selectItem[key] = ''
       }
       var self = this
-      this.$axios.get('quality/inspectionRecord/?ordering=' + self.ordering).then(function (response) {
+      this.$axios.get('quality/inspectionReport/?ordering=' + self.ordering).then(function (response) {
         self.list = response.data.results
         self.listCount = response.data.count
         if (response.data.next !== null) {
@@ -682,7 +682,7 @@ export default {
       this.listNextUrl = ''
       this.showSearchView = false
       var self = this
-      this.$axios.get('quality/inspectionRecord/?state=' + self.selectItem.state +
+      this.$axios.get('quality/inspectionReport/?state=' + self.selectItem.state +
               '&auditor=' + self.selectItem.auditor +
               '&create_user=' + self.selectItem.create_user +
               '&type=' + self.selectItem.type +
@@ -746,7 +746,7 @@ export default {
       this.type = {}
       this.alterData = []// 清空审核数据
       var self = this
-      this.$axios.get(`quality/inspectionRecord/` + id).then(function (response) {
+      this.$axios.get(`quality/inspectionReport/` + id).then(function (response) {
         self.detail = response.data
         self.type = self.detail.type
         response.data.child.forEach(function (value, i) {
@@ -781,7 +781,7 @@ export default {
         return
       }
       this.formItem.state = state
-      this.$axios.patch(`quality/inspectionRecord/` + self.detail.id + '/', {
+      this.$axios.patch(`quality/inspectionReport/` + self.detail.id + '/', {
         state: self.formItem.state,
         alter: self.formItem.alter
       }).then(function (response
@@ -881,7 +881,7 @@ export default {
       this.alterList = []
       this.fileData = []
       var self = this
-      this.$axios.get(`quality/inspectionRecord/` + id).then(function (response) {
+      this.$axios.get(`quality/inspectionReport/` + id).then(function (response) {
         self.formItem.id = response.data.id
         self.formItem.name = response.data.name
         self.formItem.state = response.data.state
@@ -1017,7 +1017,7 @@ export default {
     /* 提交子项物料项 */
     uploadChild () {
       var self = this
-      this.$axios.post(`quality/inspectionRecordItem/`, {
+      this.$axios.post(`quality/inspectionReportItem/`, {
         defect: self.formItem_child.defect,
         ok_sum: self.formItem_child.ok_sum,
         ng_sum: self.formItem_child.ng_sum,
@@ -1094,7 +1094,7 @@ export default {
       if (!confirm('确认保存??')) {
         return
       }
-      this.$axios.post(`quality/inspectionRecord/`, {
+      this.$axios.post(`quality/inspectionReport/`, {
         name: self.formItem.name,
         code: self.formItem.code,
         type: self.formItem.type,
@@ -1133,7 +1133,7 @@ export default {
       if (!confirm('确认保存??')) {
         return
       }
-      this.$axios.put(`quality/inspectionRecord/` + self.formItem.id + '/', {
+      this.$axios.put(`quality/inspectionReport/` + self.formItem.id + '/', {
         name: self.formItem.name,
         code: self.formItem.code,
         type: self.formItem.type,
@@ -1170,7 +1170,7 @@ export default {
       if (!confirm('确认保存??')) {
         return
       }
-      this.$axios.post(`quality/inspectionRecord/`, {
+      this.$axios.post(`quality/inspectionReport/`, {
         name: self.formItem.name,
         code: self.formItem.code,
         type: self.formItem.type,
@@ -1194,7 +1194,7 @@ export default {
       }).then(function (response) {
         self.formItem.file = []
         self.fileData = []
-        self.$axios.patch(`quality/inspectionRecord/` + response.data.id + '/', {
+        self.$axios.patch(`quality/inspectionReport/` + response.data.id + '/', {
           state: '审核中'
         }).then(function (response
         ) {
@@ -1220,7 +1220,7 @@ export default {
       if (!confirm('确认保存??')) {
         return
       }
-      this.$axios.put(`quality/inspectionRecord/` + self.formItem.id + '/', {
+      this.$axios.put(`quality/inspectionReport/` + self.formItem.id + '/', {
         name: self.formItem.name,
         code: self.formItem.code,
         type: self.formItem.type,
@@ -1244,7 +1244,7 @@ export default {
       }).then(function (response) {
         self.formItem.file = []
         self.fileData = []
-        self.$axios.patch(`quality/inspectionRecord/` + response.data.id + '/', {
+        self.$axios.patch(`quality/inspectionReport/` + response.data.id + '/', {
           state: '审核中'
         }).then(function (response
         ) {
@@ -1273,7 +1273,7 @@ export default {
       self.userInfor = response.data.results
       self.$axios.get('quality/defectType/?page_size=99999&ordering=-id&state=使用中').then(function (response) {
         self.defectType = response.data.results
-        self.$axios.get('quality/inspectionRecordType/?page_size=99999&ordering=-id&state=使用中').then(function (response) {
+        self.$axios.get('quality/inspectionReportType/?page_size=99999&ordering=-id&state=使用中').then(function (response) {
           self.typeInfor = response.data.results
           self.showListView()
         }).catch(function (err) {
@@ -1313,10 +1313,10 @@ export default {
       return this.$store.getters.getuserInfor.permissions
     },
     canCreate () {
-      return 'quality.add_inspectionrecordmodel' in this.permissions
+      return 'quality.add_inspectionreportmodel' in this.permissions
     },
     canRead () {
-      return 'quality.read_inspectionrecordmodel' in this.permissions
+      return 'quality.read_inspectionreportmodel' in this.permissions
     }
 
   },
@@ -1347,7 +1347,7 @@ export default {
       if (newval === undefined) {
         return
       }
-      this.$axios.get(`quality/inspectionRecordType/` + newval).then(function (response) {
+      this.$axios.get(`quality/inspectionReportType/` + newval).then(function (response) {
         if (response.data.attach_attribute !== null) {
           var result = response.data.attach_attribute.split(';')
           if (result.length > 0) {
@@ -1391,7 +1391,7 @@ export default {
 }
 </script>
 <style scoped>
-  .inspectionRecord{
+  .inspectionReport{
     position: relative;
     top: 0;
     width: 100%;

@@ -31,9 +31,9 @@
 <!--              <img  height=50% src="../../../static/icon/bpgl.png"/>-->
 <!--              <span>备品管理</span>-->
 <!--            </button>-->
-            <button  @click="onItemClick('inspectionRecord')">
+            <button  @click="onItemClick('inspectionReport')">
               <img  height=50% src="../../../static/icon/jyjl.png"/>
-              <span>检验记录</span>
+              <span>检验汇报</span>
             </button>
             <button  @click="onItemClick('maintainRecord')">
               <img  height=50% src="../../../static/icon/wxjl.png"/>

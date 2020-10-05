@@ -187,10 +187,10 @@ export default new Router({
           component: () => import('@/views/home/content/quality/InspectionStandard')
         },
         {
-          // 检验记录
-          path: 'inspectionRecord',
-          name: 'inspectionRecord',
-          component: () => import('@/views/home/content/quality/InspectionRecord')
+          // 检验汇报
+          path: 'inspectionReport',
+          name: 'inspectionReport',
+          component: () => import('@/views/home/content/quality/InspectionReport')
         },
         {
           // 品质看板
