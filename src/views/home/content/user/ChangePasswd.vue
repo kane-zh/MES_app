@@ -61,11 +61,8 @@ export default {
         alert('修改密码成功')
         this.$router.push({name: 'login'})
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     },
     goback () {
@@ -80,7 +77,7 @@ export default {
   }
 }
 </script>
-<style scoped>
+<style scoped lang="scss" >
   .changePasswd{
     position: relative;
     top: 0;

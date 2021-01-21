@@ -38,7 +38,7 @@
           </select>
         </div>
         <div>排序:
-            <select v-model="ordering">
+            <select v-model="selectItem.ordering"  >
               <option selected hidden disabled value="">请选择排序方式</option>
               <option value="id">添加时间正序</option>
               <option value="-id">添加时间倒序</option>
@@ -53,7 +53,7 @@
 
         </div>
         <div style="border: none">
-          <button  @click="clear" style="background: #1EBC85 100%">清除</button>
+          <button  @click="showListView" style="background: #1EBC85 100%">清除</button>
           <button  @click="select" style="background: #2E7DFF 100%">确定</button>
         </div>
       </div>
@@ -94,21 +94,20 @@ export default {
       list: [],
       listCount: 0,
       listNextUrl: '',
-      listScroll: null,
+      listScroll: '',
       /* 列表查询参数 */
       selectItem: {
         warehouse: '',
         equipmentType: '',
         state: '',
-        searchValue: ''
+        searchValue: '',
+        ordering: ''
       },
-      /* 列表页数据排序 */
-      ordering: '-id',
+
       /* 创建页表单项数据 */
       formItem: {
         id: '',
-        state: '',
-        alter: []
+        state: ''
       },
       warehouse: [],
       equipmentType: [],
@@ -122,11 +121,12 @@ export default {
       this.list = [] // 清空列表数据
       this.listCount = 0
       this.listNextUrl = ''
+      this.showSearchView = false
       for (let key in this.selectItem) {
         this.selectItem[key] = ''
       }
       var self = this
-      this.$axios.get('warehouse/equipmentStockDetail/?ordering=' + self.ordering).then(function (response) {
+      this.$axios.get('warehouse/equipmentStockDetail/?ordering=' + self.selectItem.ordering).then(function (response) {
         self.list = response.data.results
         self.listCount = response.data.count
         if (response.data.next !== null) {
@@ -134,11 +134,8 @@ export default {
         }
         self.showViewid = 'list'
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     },
     /* 列表查询数据 */
@@ -152,26 +149,16 @@ export default {
               '&warehouse_code=' + self.selectItem.warehouse +
               '&equipmentType_code=' + self.selectItem.equipmentType +
               '&search=' + self.selectItem.searchValue +
-                '&ordering=' + self.ordering).then(function (response) {
+                '&ordering=' + self.selectItem.ordering).then(function (response) {
         self.list = response.data.results
         self.listCount = response.data.count
         if (response.data.next !== null) {
           self.listNextUrl = response.data.next.replace(self.$axios.defaults.baseURL, '')
         }
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
-    },
-    clear () {
-      this.searchItem.warehouse = ''
-      this.searchItem.equipmentTypee = ''
-      this.searchItem.state = ''
-      this.searchItem.searchValue = ''
-      this.select()
     },
     goback () {
       this.$router.replace({name: 'Home'})
@@ -196,11 +183,8 @@ export default {
           self.listNextUrl = response.data.next.replace(self.$axios.defaults.baseURL, '')
         }
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     }
   },
@@ -229,18 +213,12 @@ export default {
           self.userInfor = response.data.results
           self.showListView()
         }).catch(function (err) {
-          if (err.request) {
-            alert(err.request.response)
-          } else {
-            console.log('Error', err.message)
-          }
+          // 错误提示
+          console.log(err)
         })
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     }).catch(function (err) {
       if (err.request) {
@@ -252,7 +230,7 @@ export default {
   }
 }
 </script>
-<style scoped>
+<style scoped lang="scss" >
   .equipmentStock{
     position: relative;
     top: 0;

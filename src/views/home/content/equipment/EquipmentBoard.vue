@@ -38,7 +38,7 @@
             </select>
           </div>
           <div>排序:
-            <select v-model="ordering">
+            <select v-model="selectItem.ordering"  >
               <option selected hidden disabled value="">请选择排序方式</option>
               <option value="id">添加时间正序</option>
               <option value="-id">添加时间倒序</option>
@@ -53,7 +53,7 @@
 
           </div>
           <div style="border: none">
-             <button  @click="clear" style="background: #1EBC85 100%">清除</button>
+             <button  @click="showListView" style="background: #1EBC85 100%">清除</button>
              <button  @click="select" style="background: #2E7DFF 100%">确定</button>
           </div>
       </div>
@@ -124,28 +124,9 @@
             <a target='_black' v-bind:key="id" :href="value.file">{{value.file_name}}</a>
           </template>
         </dl>
-        <dl>
-          <dt>历史审核记录:</dt>
-          <template v-for="(value,id) in detail.alter">
-            <dd v-bind:key="id">
-              {{"&#12288;&#12288;&#12288;"+value.desc+"&#12288;" +value.create_user+"&#12288;"+value.create_time}}
-            </dd>
-          </template>
-        </dl>
-        <dl>
-          <dt>新添加记录:</dt>
-          <template v-for="(value,id) in alterData">
-            <dd v-bind:key="id">
-              {{"&#12288;&#12288;&#12288;"+value.desc}}
-            </dd>
-          </template>
-        </dl>
+
       </div>
-      <div class="alter" v-show="detail.state!=='使用中'">
-        审核信息:
-        <input v-model="alterItem.desc" type="text" placeholder="  请输入当前信息:的审核记录...">
-       <!--        <button type="button" @click="uploadAlter">提交记录</button>-->
-      </div>
+
        <div class="button">
         <button type="button" @click="changeState('审核中')" v-show="showSubmitBt===true">提交数据</button>
         <button type="button" @click="changeState('使用中')" v-show="showApprovedBt===true" >通过审核</button>
@@ -169,7 +150,7 @@ export default {
       list: [],
       listCount: 0,
       listNextUrl: '',
-      listScroll: null,
+      listScroll: '',
       /* 列表页查询参数 */
       selectItem: {
         state: '',
@@ -177,23 +158,14 @@ export default {
         auditor: '',
         searchValue: ''
       },
-      /* 列表页数据排序 */
-      ordering: '-id',
+
       /* 创建页表单项数据 */
       formItem: {
         id: '',
-        state: '',
-        alter: []
+        state: ''
       },
       /* 详情页数据 */
       detail: [],
-      /* 详情页审核记录项表单 */
-      alterItem: {
-        desc: '',
-        uri: 'board'
-      },
-      alterList: [],
-      alterData: [],
       /* 详情页按钮显示控制 */
       showSubmitBt: false,
       showReturnBt: false,
@@ -211,11 +183,12 @@ export default {
       this.list = [] // 清空列表数据
       this.listCount = 0
       this.listNextUrl = ''
+      this.showSearchView = false
       for (let key in this.selectItem) {
         this.selectItem[key] = ''
       }
       var self = this
-      this.$axios.get('equipment/board/?ordering=' + self.ordering).then(function (response) {
+      this.$axios.get('equipment/board/?ordering=' + self.selectItem.ordering).then(function (response) {
         self.list = response.data.results
         self.listCount = response.data.count
         if (response.data.next !== null) {
@@ -223,11 +196,8 @@ export default {
         }
         self.showViewid = 'list'
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     },
     /* 列表查询数据 */
@@ -241,26 +211,16 @@ export default {
                 '&auditor=' + self.selectItem.auditor +
               '&create_user=' + self.selectItem.create_user +
               '&search=' + self.selectItem.searchValue +
-              '&ordering=' + self.ordering).then(function (response) {
+              '&ordering=' + self.selectItem.ordering).then(function (response) {
         self.list = response.data.results
         self.listCount = response.data.count
         if (response.data.next !== null) {
           self.listNextUrl = response.data.next.replace(self.$axios.defaults.baseURL, '')
         }
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
-    },
-    clear () {
-      this.selectItem.state = ''
-      this.selectItem.create_user = ''
-      this.selectItem.auditor = ''
-      this.selectItem.searchValue = ''
-      this.select()
     },
     goback () {
       this.$router.replace({name: 'Home'})
@@ -285,17 +245,13 @@ export default {
           self.listNextUrl = response.data.next.replace(self.$axios.defaults.baseURL, '')
         }
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     },
     /* 显示详情视图 */
     showDetailView (value) {
       this.detail = [] // 清空详情数据
-      this.alterData = []// 清空审核数据
       this.imageInfor = {}
       var self = this
       if (!(('equipment.read_equipmentboardmodel' in this.permissions) || (value.auditor === this.username) || (value.create_user === this.username))) {
@@ -307,11 +263,8 @@ export default {
         self.imageInfor = self.detail.image
         self.showViewid = 'detail'
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     },
     /* 改变数据项状态 */
@@ -322,23 +275,20 @@ export default {
       }
       this.formItem.state = state
       this.$axios.patch(`equipment/board/` + self.detail.id + '/', {
-        state: self.formItem.state,
-        alter: self.formItem.alter
+        state: self.formItem.state
+
       }).then(function (response
       ) {
         self.detail.state = self.formItem.state
         self.formItem.state = ''
-        self.formItem.alter = []
+
         if (self.detail.state === '作废') {
           self.showListView()
         }
         alert('数据提交成功')
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     }
   },
@@ -399,365 +349,333 @@ export default {
   }
 }
 </script>
-<style scoped>
+<style scoped lang="scss" >
   .equipmentBoard{
     position: relative;
     top: 0;
     width: 100%;
     height: 100%;
-  }
-  .list{
-    position: absolute;
-    top: 0;
-    width: 100%;
-    height: 100%;
-  }
-  .list .title{
-    position: absolute;
-    top: 0;
-    width: 100%;
-    height: 5%;
-    font-family: PingFangSC-Semibold;
-    font-size: 0.6em;
-    line-height: 2em;
-    color: #151515;
-    text-align: center;
-  }
-  .list .title .button{
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 30%;
-    height: 100%;
-  }
-  .list .title .button button{
-    position: relative;
-    top: 20%;
-    width: 30%;
-    height: 60%;
-    background: #ffffff;
-    border: 1px solid #363E42;
-    border-radius: 13px;
-    margin-right: 10%;
-    float: right;
-  }
-  .list .title #add{
-    position: absolute;
-    top: 20%;
-    left: 3%;
-    width: 9%;
-    height: 60%;
-    background: #ffffff;
-    border: 1px solid #363E42;
-    border-radius: 13px;
-  }
-  .list .search{
-    position: absolute;
-    top: 7%;
-    width: 96%;
-    height: 90%;
-    margin-left: 2%;
-    margin-right: 2%;
-    font-family: PingFangSC-Regular;
-    font-size: 0.5em;
-    line-height: 2em;
-    color: #000000;
-  }
-  .list .search div{
-    position: relative;
-    width: 100%;
-    height: 7%;
-    line-height: 2.5em;
-    border-bottom:2px dashed rgba(100, 100, 100, 0.5);
-  }
-  .list .search select{
-    position: absolute;
-    top: 20%;
-    right: 0;
-    width: 60%;
-    height: 60%;
-    font-size: 0.8em;
-    border: 1px solid #015afe;
-    background: #ffffff;
-    border-radius: 1em;
-    appearance:none;
-    -moz-appearance:none;
-    -webkit-appearance:none;
-    background: #ffffff;
-    border: none;
-  }
-  .list .search input{
-    position: absolute;
-    top: 20%;
-    right: 0;
-    width: 60%;
-    height: 60%;
-    font-size: 0.8em;
-    background: #ffffff;
-    border: none;
-  }
-  .list .search button{
-    position: relative;
-    margin-left: 7%;
-    width: 40%;
-    height: 90%;
-    font-size: 0.8em;
-    border: 1px solid #015afe;
-    border-radius: 1em;
-    float: left;
-  }  .list .table{
-    position: relative;
-    top: 5%;
-    width: 100%;
-    height: 95%;
-    overflow: auto;
-    overflow-x: hidden;
-  }
-  .list .table ul{
-    position: absolute;
-    top: 0;
-    width: 96%;
-    height: 100%;
-    padding-right: 2%;
-    padding-left:2%;
-    font-family: PingFangSC-Regular;
-    font-size: 0.4em;
-    line-height: 2em;
-    color: #151515;
-  }
-  .list .table li{
-    position: relative;
-    top: 0;
-    height: 5%;
-    margin-bottom: 3%;
-  }
-  .list .table .code{
-    position: absolute;
-    top:0;
-    font-family: PingFangSC-Medium;
-    font-size: 1em;
-    line-height: 2em;
-    color: #262426;
-    text-align: center;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.20);
-    display: inline-block;
-  }
-  .list .table .name{
-    position: absolute;
-    top:50%;
-    font-family: PingFangSC-Medium;
-    font-size: 1em;
-    line-height: 2em;
-    color: #262426;
-    text-align: center;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.20);
-    display: inline-block;
-  }
-  .list .table .create{
-    position: absolute;
-    top:0;
-    left: 40%;
-    font-family: PingFangSC-Medium;
-    font-size: 1em;
-    line-height: 2em;
-    color: #262426;
-    text-align: center;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.20);
-    display: inline-block;
-  }
-  .list .table .auditor{
-    position: absolute;
-    top:50%;
-    left: 40%;
-    font-family: PingFangSC-Medium;
-    font-size: 1em;
-    line-height: 2em;
-    color: #262426;
-    text-align: center;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.20);
-    display: inline-block;
-  }
-  .list .table .state{
-    position: absolute;
-    top:10%;
-    right: 0;
-    width: 2em;
-    font-family: PingFangSC-Medium;
-    font-size: 1em;
-    line-height: 2em;
-    color: #FFFFFF;
-    border-radius: 7em;
-    text-align: center;
-    display: inline-block;
-  }
-
-  .list .table::-webkit-scrollbar {
-    display: none;
-  }
-  .detail{
-    position: relative;
-    top: 0;
-    width: 100%;
-    height: 100%;
-  }
-  .detail .title{
-    position: absolute;
-    top: 0;
-    width: 100%;
-    height: 5%;
-    font-family: PingFangSC-Regular;
-    font-size: 0.6em;
-    line-height: 2em;
-    color: #151515;
-    text-align: center;
-  }
-  .detail .title .button{
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 30%;
-    height:100%;
-  }
-  .detail .title .button button{
-    position: absolute;
-    top: 20%;
-    margin-right: 10%;
-    width: 30%;
-    height: 60%;
-    background: #ffffff;
-    border: 1px solid #363E42;
-    border-radius: 13px;
-  }
-  .detail .content{
-    position: absolute;
-    top: 5%;
-    width: 96%;
-    height: 80%;
-    padding-left: 2%;
-    padding-right: 2%;
-    overflow: auto;
-    overflow-x: hidden;
-  }
-  .detail .content div{
-    position: relative;
-    top: 0;
-    height: 8%;
-    width: 100%;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.20);
-     border-bottom:2px dashed rgba(100, 100, 100, 0.3);
-  }
-  .detail .content div .name{
-    position: absolute;
-    left: 0;
-    width: 30%;
-    height: 100%;
-    font-family: PingFangSC-Medium;
-    font-size: 0.6em;
-    line-height: 2em;
-    color: #151515;
-    overflow-x: auto;
-  }
-  .detail .content div .code{
-    position: absolute;
-    right: 0;
-    width: 70%;
-    height: 100%;
-    font-family: PingFangSC-Regular;
-    font-size: 0.5em;
-    line-height: 2.5em;
-    color: #151515;
-    overflow-x: auto;
-    text-align: right;
-  }
-  .detail .content dl{
-    position: relative;
-    top: 0;
-    height: 15%;
-    width: 100%;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.20);
-     border-bottom:2px dashed rgba(100, 100, 100, 0.5);
-    overflow-x: auto;
-  }
-  .detail .content dl dt{
-    position: absolute;
-    left: 0;
-    font-family: PingFangSC-Regular;
-    font-size: 0.6em;
-    line-height: 1em;
-    color: #151515;
-  }
-  .detail .content dl dd{
-    position: relative;
-    right: 0;
-    font-family: PingFangSC-Regular;
-    font-size: 0.5em;
-    line-height: 2em;
-    color: #151515;
-  }
-  .detail .content dl a{
-    height: 100%;
-    font-family: PingFangSC-Regular;
-    font-size: 0.5em;
-    line-height: 2em;
-    float: right;
-    margin-left: 5%;
-  }
-  .detail .content dl a img{
-    height: auto;
-    width: auto;
-    max-height: 95%;
-  }
- .detail .alter{
-    position: absolute;
-    top: 80%;
-    width: 100%;
-    height: 10%;
-    font-family: PingFangSC-Regular;
-    font-size: 0.6em;
-    line-height: 2em;
-    color: #000000;
-    letter-spacing: -0.45px;
-    background: #dcdcdc;
-  }
-  .detail .alter input{
-    position: absolute;
-    right: 25%;
-    width: 50%;
-    height: 100%;
-    font-size: 0.8em;
-    border: 1px solid #D8D8D8;
-    background: #ffffff;
-    border-radius: 1em;
-  }
-  .detail .alter button{
-    position: absolute;
-    right: 0;
-    top: 25%;
-    width: 20%;
-    height: 50%;
-    background: #ffffff;
-    border: 1px solid #363E42;
-    border-radius: 13px;
-  }
-  .detail .button{
-    position: absolute;
-    top: 92%;
-    width: 96%;
-    height: 8%;
-    padding-left: 2%;
-    padding-right: 2%;
-  }
-  .detail .button button{
-    position: relative;
-    margin-left: 7%;
-    width: 40%;
-    height: 50%;
-    font-size: 0.5em;
-    border: 1px solid #015afe;
-    border-radius: 1em;
-    float: left;
-  }
-  .detail .content::-webkit-scrollbar {
-    display: none;
+    .list{
+      position: absolute;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      .title{
+        position: absolute;
+        top: 0;
+        width: 100%;
+        height: 5%;
+        font-family: PingFangSC-Semibold;
+        font-size: 0.6em;
+        line-height: 2em;
+        color: #151515;
+        text-align: center;
+        .button{
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 30%;
+          height: 100%;
+          button{
+            position: relative;
+            top: 20%;
+            width: 30%;
+            height: 60%;
+            background: #ffffff;
+            border: 1px solid #363E42;
+            border-radius: 13px;
+            margin-right: 10%;
+            float: right;
+          }
+        }
+        #add{
+          position: absolute;
+          top: 20%;
+          left: 3%;
+          width: 9%;
+          height: 60%;
+          background: #ffffff;
+          border: 1px solid #363E42;
+          border-radius: 13px;
+        }
+      }
+      .search{
+        position: absolute;
+        top: 7%;
+        width: 96%;
+        height: 90%;
+        margin-left: 2%;
+        margin-right: 2%;
+        font-family: PingFangSC-Regular;
+        font-size: 0.5em;
+        line-height: 2em;
+        color: #000000;
+        div{
+          position: relative;
+          width: 100%;
+          height: 7%;
+          line-height: 2.5em;
+          border-bottom:2px dashed rgba(100, 100, 100, 0.5);
+          select{
+            position: absolute;
+            top: 20%;
+            right: 0;
+            width: 60%;
+            height: 60%;
+            font-size: 0.8em;
+            border: 1px solid #015afe;
+            background: #ffffff;
+            border-radius: 1em;
+            appearance:none;
+            -moz-appearance:none;
+            -webkit-appearance:none;
+            background: #ffffff;
+            border: none;
+          }
+          input{
+            position: absolute;
+            top: 20%;
+            right: 0;
+            width: 60%;
+            height: 60%;
+            font-size: 0.8em;
+            background: #ffffff;
+            border: none;
+          }
+          button{
+            position: relative;
+            margin-left: 7%;
+            width: 40%;
+            height: 90%;
+            font-size: 0.8em;
+            border: 1px solid #015afe;
+            border-radius: 1em;
+            float: left;
+          }
+        }
+      }
+      .table{
+        position: relative;
+        top: 5%;
+        width: 100%;
+        height: 95%;
+        overflow: auto;
+        overflow-x: hidden;
+        ul{
+          position: absolute;
+          top: 0;
+          width: 96%;
+          height: 100%;
+          padding-right: 2%;
+          padding-left:2%;
+          font-family: PingFangSC-Regular;
+          font-size: 0.4em;
+          line-height: 2em;
+          color: #151515;
+          li{
+            position: relative;
+            top: 0;
+            height: 5%;
+            margin-bottom: 3%;
+            .code{
+              position: absolute;
+              top:0;
+              font-family: PingFangSC-Medium;
+              font-size: 1em;
+              line-height: 2em;
+              color: #262426;
+              text-align: center;
+              text-shadow: 0 2px 4px rgba(0,0,0,0.20);
+              display: inline-block;
+            }
+            .name{
+              position: absolute;
+              top:50%;
+              font-family: PingFangSC-Medium;
+              font-size: 1em;
+              line-height: 2em;
+              color: #262426;
+              text-align: center;
+              text-shadow: 0 2px 4px rgba(0,0,0,0.20);
+              display: inline-block;
+            }
+            .create{
+              position: absolute;
+              top:0;
+              left: 40%;
+              font-family: PingFangSC-Medium;
+              font-size: 1em;
+              line-height: 2em;
+              color: #262426;
+              text-align: center;
+              text-shadow: 0 2px 4px rgba(0,0,0,0.20);
+              display: inline-block;
+            }
+            .auditor{
+              position: absolute;
+              top:50%;
+              left: 40%;
+              font-family: PingFangSC-Medium;
+              font-size: 1em;
+              line-height: 2em;
+              color: #262426;
+              text-align: center;
+              text-shadow: 0 2px 4px rgba(0,0,0,0.20);
+              display: inline-block;
+            }
+            .state{
+              position: absolute;
+              top:10%;
+              right: 0;
+              width: 2em;
+              font-family: PingFangSC-Medium;
+              font-size: 1em;
+              line-height: 2em;
+              color: #FFFFFF;
+              border-radius: 7em;
+              text-align: center;
+              display: inline-block;
+            }
+          }
+        }
+      }
+      .table::-webkit-scrollbar {
+        display: none;
+      }
+    }
+    .detail{
+      position: relative;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      .title{
+        position: absolute;
+        top: 0;
+        width: 100%;
+        height: 5%;
+        font-family: PingFangSC-Regular;
+        font-size: 0.6em;
+        line-height: 2em;
+        color: #151515;
+        text-align: center;
+        .button{
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 30%;
+          height:100%;
+          button{
+            position: absolute;
+            top: 20%;
+            margin-right: 10%;
+            width: 30%;
+            height: 60%;
+            background: #ffffff;
+            border: 1px solid #363E42;
+            border-radius: 13px;
+          }
+        }
+      }
+      .content{
+        position: absolute;
+        top: 5%;
+        width: 96%;
+        height: 80%;
+        padding-left: 2%;
+        padding-right: 2%;
+        overflow: auto;
+        overflow-x: hidden;
+        div{
+          position: relative;
+          top: 0;
+          height: 8%;
+          width: 100%;
+          text-shadow: 0 2px 4px rgba(0,0,0,0.20);
+          border-bottom:2px dashed rgba(100, 100, 100, 0.3);
+          .name{
+            position: absolute;
+            left: 0;
+            width: 30%;
+            height: 100%;
+            font-family: PingFangSC-Medium;
+            font-size: 0.6em;
+            line-height: 2em;
+            color: #151515;
+            overflow-x: auto;
+          }
+          .code{
+            position: absolute;
+            right: 0;
+            width: 70%;
+            height: 100%;
+            font-family: PingFangSC-Regular;
+            font-size: 0.5em;
+            line-height: 2.5em;
+            color: #151515;
+            overflow-x: auto;
+            text-align: right;
+          }
+          dl{
+            position: relative;
+            top: 0;
+            height: 15%;
+            width: 100%;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.20);
+            border-bottom:2px dashed rgba(100, 100, 100, 0.5);
+            overflow-x: auto;
+            dt{
+              position: absolute;
+              left: 0;
+              font-family: PingFangSC-Regular;
+              font-size: 0.6em;
+              line-height: 1em;
+              color: #151515;
+            }
+            dd{
+              position: relative;
+              right: 0;
+              font-family: PingFangSC-Regular;
+              font-size: 0.5em;
+              line-height: 2em;
+              color: #151515;
+            }
+            a{
+              height: 100%;
+              font-family: PingFangSC-Regular;
+              font-size: 0.5em;
+              line-height: 2em;
+              float: right;
+              margin-left: 5%;
+              img{
+                height: auto;
+                width: auto;
+                max-height: 95%;
+              }
+            }
+          }
+        }
+      }
+      .content::-webkit-scrollbar {
+        display: none;
+      }
+      .button{
+        position: absolute;
+        top: 92%;
+        width: 96%;
+        height: 8%;
+        padding-left: 2%;
+        padding-right: 2%;
+        button{
+          position: relative;
+          margin-left: 7%;
+          width: 40%;
+          height: 50%;
+          font-size: 0.5em;
+          border: 1px solid #015afe;
+          border-radius: 1em;
+          float: left;
+        }
+      }
+    }
   }
 </style>

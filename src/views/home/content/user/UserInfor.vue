@@ -242,11 +242,8 @@ export default {
         self.formItem.image = response.data.image
         alert('数据提交成功')
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     },
     goback () {
@@ -265,7 +262,7 @@ export default {
   }
 }
 </script>
-<style scoped>
+<style scoped lang="scss" >
   .userInfor{
     position: relative;
     top: 0;

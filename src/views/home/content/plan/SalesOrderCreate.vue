@@ -47,7 +47,7 @@
             <input v-model="selectItem.stop_time"  type="datetime-local" placeholder="选择日期和时间">
           </div>
           <div>排序:
-            <select v-model="ordering">
+            <select v-model="selectItem.ordering"  >
               <option selected hidden disabled value="">请选择排序方式</option>
               <option value="id">添加时间正序</option>
               <option value="-id">添加时间倒序</option>
@@ -62,7 +62,7 @@
 
           </div>
           <div style="border: none">
-             <button  @click="clear" style="background: #1EBC85 100%">清除</button>
+             <button  @click="showListView" style="background: #1EBC85 100%">清除</button>
              <button  @click="select" style="background: #2E7DFF 100%">确定</button>
           </div>
       </div>
@@ -182,27 +182,6 @@
             <a target='_black' v-bind:key="id" :href="value.file">{{value.file_name}}</a>
           </template>
         </dl>
-        <dl>
-          <dt>审核记录:</dt>
-          <template v-for="(value,id) in detail.alter">
-            <dd v-bind:key="id">
-              {{"&#12288;&#12288;&#12288;"+value.desc+"&#12288;" +value.create_user+"&#12288;"+value.create_time}}
-            </dd>
-          </template>
-        </dl>
-        <dl>
-          <dt>新加记录:</dt>
-          <template v-for="(value,id) in alterData">
-            <dd v-bind:key="id">
-              {{"&#12288;&#12288;&#12288;"+value.desc}}
-            </dd>
-          </template>
-        </dl>
-      </div>
-      <div class="alter" v-show="detail.state!=='使用中'">
-        审核信息:
-        <input v-model="alterItem.desc" type="text" placeholder="  请输入当前信息:的审核记录...">
-       <!--        <button type="button" @click="uploadAlter">提交记录</button>-->
       </div>
       <div class="button">
         <button type="button" @click="changeState('审核中')" v-show="showSubmitBt===true">提交数据</button>
@@ -474,13 +453,7 @@
 
           </tr>
         </table>
-        <div>历史审核记录:
-          <ul>
-            <li v-for="value in alterList" v-bind:key="value.id" >
-              {{value.desc+value.create_time+value.create_user}}
-            </li>
-          </ul>
-        </div>
+
       </form>
       <div class="button">
         <button type="button" @click="update">保存数据</button>
@@ -506,7 +479,7 @@ export default {
       list: [],
       listCount: 0,
       listNextUrl: '',
-      listScroll: null,
+      listScroll: '',
       /* 子项列表数据 */
       list_child: [],
       /* 列表页查询参数 */
@@ -515,21 +488,14 @@ export default {
         create_user: '',
         auditor: '',
         searchValue: '',
+        ordering: '',
         start_time: '',
         stop_time: ''
       },
-      /* 列表页数据排序 */
-      ordering: '-id',
+
       /* 详情页数据 */
       detail: [],
       client: {},
-      /* 详情页审核记录项表单 */
-      alterItem: {
-        desc: '',
-        uri: 'salesOrderCreate'
-      },
-      alterList: [],
-      alterData: [],
       /* 详情页按钮显示控制 */
       showSubmitBt: false,
       showReturnBt: false,
@@ -546,7 +512,6 @@ export default {
         client: null,
         child: [],
         file: [],
-        alter: [],
         attribute1: '',
         attribute2: '',
         attribute3: '',
@@ -607,11 +572,12 @@ export default {
       this.list = [] // 清空列表数据
       this.listCount = 0
       this.listNextUrl = ''
+      this.showSearchView = false
       for (let key in this.selectItem) {
         this.selectItem[key] = ''
       }
       var self = this
-      this.$axios.get('plan/salesOrderCreate/?ordering=' + self.ordering).then(function (response) {
+      this.$axios.get('plan/salesOrderCreate/?ordering=' + self.selectItem.ordering).then(function (response) {
         self.list = response.data.results
         self.listCount = response.data.count
         if (response.data.next !== null) {
@@ -619,11 +585,8 @@ export default {
         }
         self.showViewid = 'list'
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     },
     /* 列表查询数据 */
@@ -639,26 +602,16 @@ export default {
               '&search=' + self.selectItem.searchValue +
               '&start_time=' + self.selectItem.start_time +
               '&stop_time=' + self.selectItem.stop_time +
-              '&ordering=' + self.ordering).then(function (response) {
+              '&ordering=' + self.selectItem.ordering).then(function (response) {
         self.list = response.data.results
         self.listCount = response.data.count
         if (response.data.next !== null) {
           self.listNextUrl = response.data.next.replace(self.$axios.defaults.baseURL, '')
         }
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
-    },
-    clear () {
-      this.selectItem.state = ''
-      this.selectItem.create_user = ''
-      this.selectItem.auditor = ''
-      this.selectItem.searchValue = ''
-      this.select()
     },
     goback () {
       this.$router.replace({name: 'Home'})
@@ -683,17 +636,13 @@ export default {
           self.listNextUrl = response.data.next.replace(self.$axios.defaults.baseURL, '')
         }
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     },
     /* 显示详情视图 */
     showDetailView (id) {
       this.detail = [] // 清空详情数据
-      this.alterData = []// 清空审核数据
       this.client = {}
       this.list_child = []
       var self = this
@@ -720,11 +669,8 @@ export default {
         })
         self.showViewid = 'detail'
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     },
     /* 改变数据项状态 */
@@ -735,13 +681,13 @@ export default {
       }
       this.formItem.state = state
       this.$axios.patch(`plan/salesOrderCreate/` + self.detail.id + '/', {
-        state: self.formItem.state,
-        alter: self.formItem.alter
+        state: self.formItem.state
+
       }).then(function (response
       ) {
         self.detail.state = self.formItem.state
         self.formItem.state = ''
-        self.formItem.alter = []
+
         if (self.detail.state === '作废') {
           self.showListView()
         }
@@ -750,11 +696,8 @@ export default {
         }
         alert('数据提交成功')
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     },
     /* 改变数据项状态 */
@@ -767,11 +710,8 @@ export default {
         self.showDetailView(self.detail.id)
         alert('数据提交成功')
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     },
     /* 显示创建视图 */
@@ -851,7 +791,7 @@ export default {
         }
       }
       this.list_child = []
-      this.alterList = []
+
       this.fileData = []
       var self = this
       this.$axios.get(`plan/salesOrderCreate/` + id).then(function (response) {
@@ -867,7 +807,6 @@ export default {
         self.formItem.attribute5 = response.data.attribute5
         self.formItem.desc = response.data.desc
         self.formItem.auditor = response.data.auditor
-        self.alterList = response.data.alter
         if (response.data.client !== null) {
           self.formItem.client = response.data.client.id
         } else { self.formItem.client = response.data.client }
@@ -895,11 +834,8 @@ export default {
         })
         self.showViewid = 'update'
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     },
     /* 提交文件项 */
@@ -927,11 +863,8 @@ export default {
         self.fileData.push(obj)
         alert(self.fileItem.fileName + '文件提交成功')
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     },
 
@@ -955,31 +888,6 @@ export default {
           self.fileData.splice(j, 1)
         }
       }
-    },
-    /* 提交审核记录:项 */
-    uploadAlter () {
-      var self = this
-      if (!confirm('确认提交??')) {
-        return
-      }
-      this.$axios.post(`plan/alterRecord/`, {
-        desc: self.alterItem.desc,
-        uri: self.alterItem.uri
-      }).then(function (response) {
-        var obj = {'id': response.data.id,
-          'desc': response.data.desc,
-          'uri': response.data.uri}
-        self.alterItem.desc = ''
-        self.formItem.alter.push(response.data.id)
-        self.alterData.push(obj)
-        alert('审核记录:提交成功')
-      }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
-      })
     },
     /* 提交子项产品项 */
     uploadChild () {
@@ -1037,11 +945,8 @@ export default {
         self.formItem_child.desc = ''
         alert('记录提交成功')
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     },
     removeChild: function (id) {
@@ -1116,11 +1021,8 @@ export default {
       }).then(function (response) {
         alert('数据保存成功')
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     },
     /* 保存并提交表单数据 */
@@ -1152,11 +1054,8 @@ export default {
         ) {
           alert('数据提交成功')
         }).catch(function (err) {
-          if (err.request) {
-            alert(err.request.response)
-          } else {
-            console.log('Error', err.message)
-          }
+          // 错误提示
+          console.log(err)
         })
       }).catch(function (error) {
         if (error.request) {
@@ -1196,18 +1095,12 @@ export default {
           alert('数据提交成功')
           self.showViewid = 'list'
         }).catch(function (err) {
-          if (err.request) {
-            alert(err.request.response)
-          } else {
-            console.log('Error', err.message)
-          }
+          // 错误提示
+          console.log(err)
         })
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     }
   },
@@ -1227,18 +1120,12 @@ export default {
           self.productType = response.data.results
           self.showListView()
         }).catch(function (err) {
-          if (err.request) {
-            alert(err.request.response)
-          } else {
-            console.log('Error', err.message)
-          }
+          // 错误提示
+          console.log(err)
         })
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     }).catch(function (err) {
       if (err.request) {
@@ -1307,17 +1194,14 @@ export default {
       this.$axios.get(`process/productType/` + newval).then(function (response) {
         self.productInfor = response.data.productType_item
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     }
   }
 }
 </script>
-<style scoped>
+<style scoped lang="scss" >
   .salesOrderCreate{
     position: relative;
     top: 0;
@@ -1665,38 +1549,7 @@ export default {
     width: auto;
     max-height: 95%;
   }
- .detail .alter{
-    position: absolute;
-    top: 80%;
-    width: 100%;
-    height: 10%;
-    font-family: PingFangSC-Regular;
-    font-size: 0.6em;
-    line-height: 2em;
-    color: #000000;
-    letter-spacing: -0.45px;
-    background: #dcdcdc;
-  }
-  .detail .alter input{
-    position: absolute;
-    right: 25%;
-    width: 50%;
-    height: 100%;
-    font-size: 0.8em;
-    border: 1px solid #D8D8D8;
-    background: #ffffff;
-    border-radius: 1em;
-  }
-  .detail .alter button{
-    position: absolute;
-    right: 0;
-    top: 25%;
-    width: 20%;
-    height: 50%;
-    background: #ffffff;
-    border: 1px solid #363E42;
-    border-radius: 13px;
-  }
+
   .detail .button{
     position: absolute;
     top: 92%;

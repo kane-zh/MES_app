@@ -24,7 +24,7 @@
           </select>
         </div>
         <div>排序:
-            <select v-model="ordering">
+            <select v-model="selectItem.ordering"  >
               <option selected hidden disabled value="">请选择排序方式</option>
               <option value="id">添加时间正序</option>
               <option value="-id">添加时间倒序</option>
@@ -39,7 +39,7 @@
 
         </div>
         <div style="border: none">
-          <button  @click="clear" style="background: #1EBC85 100%">清除</button>
+          <button  @click="showListView" style="background: #1EBC85 100%">清除</button>
           <button  @click="select" style="background: #2E7DFF 100%">确定</button>
         </div>
       </div>
@@ -174,14 +174,15 @@ export default {
       list: [],
       listCount: 0,
       listNextUrl: '',
-      listScroll: null,
+      listScroll: '',
       /* 列表页查询参数 */
       selectItem: {
         create_user: '',
         type: '',
-        searchValue: ''
+        searchValue: '',
+        ordering: ''
       }, /* 列表页数据排序 */
-      ordering: '-id',
+      ordering: '',
       userInfor: [],
       /* 详情页数据 */
       detail: [],
@@ -205,11 +206,12 @@ export default {
       this.list = [] // 清空列表数据
       this.listCount = 0
       this.listNextUrl = ''
+      this.showSearchView = false
       for (let key in this.selectItem) {
         this.selectItem[key] = ''
       }
       var self = this
-      this.$axios.get('equipment/equipmentState/?ordering=' + self.ordering).then(function (response) {
+      this.$axios.get('equipment/equipmentState/?ordering=' + self.selectItem.ordering).then(function (response) {
         self.list = response.data.results
         self.listCount = response.data.count
         if (response.data.next !== null) {
@@ -217,11 +219,8 @@ export default {
         }
         self.showViewid = 'list'
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     },
     /* 列表查询数据 */
@@ -233,25 +232,16 @@ export default {
       var self = this
       this.$axios.get('equipment/equipmentState/?create_user=' + self.selectItem.create_user +
               '&type=' + self.selectItem.type +
-              '&ordering=' + self.ordering).then(function (response) {
+              '&ordering=' + self.selectItem.ordering).then(function (response) {
         self.list = response.data.results
         self.listCount = response.data.count
         if (response.data.next !== null) {
           self.listNextUrl = response.data.next.replace(self.$axios.defaults.baseURL, '')
         }
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
-    },
-    clear () {
-      this.selectItem.type = ''
-      this.selectItem.create_user = ''
-      this.selectItem.searchValue = ''
-      this.select()
     },
     goback () {
       this.$router.replace({name: 'Home'})
@@ -276,11 +266,8 @@ export default {
           self.listNextUrl = response.data.next.replace(self.$axios.defaults.baseURL, '')
         }
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     },
     /* 显示详情视图 */
@@ -291,11 +278,8 @@ export default {
         self.detail = response.data
         self.showViewid = 'detail'
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     }
   },
@@ -310,11 +294,8 @@ export default {
         self.userInfor = response.data.results
         self.showListView()
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     }).catch(function (err) {
       if (err.request) {
@@ -357,17 +338,14 @@ export default {
       this.$axios.get(`equipment/equipmentType/` + newval).then(function (response) {
         self.equipmentInfor = response.data.equipmentType_item
       }).catch(function (err) {
-        if (err.request) {
-          alert(err.request.response)
-        } else {
-          console.log('Error', err.message)
-        }
+        // 错误提示
+        console.log(err)
       })
     }
   }
 }
 </script>
-<style scoped>
+<style scoped lang="scss" >
   .equipmentState{
     position: relative;
     top: 0;
@@ -729,38 +707,7 @@ export default {
     width: auto;
     max-height: 95%;
   }
- .detail .alter{
-    position: absolute;
-    top: 80%;
-    width: 100%;
-    height: 10%;
-    font-family: PingFangSC-Regular;
-    font-size: 0.6em;
-    line-height: 2em;
-    color: #000000;
-    letter-spacing: -0.45px;
-    background: #dcdcdc;
-  }
-  .detail .alter input{
-    position: absolute;
-    right: 25%;
-    width: 50%;
-    height: 100%;
-    font-size: 0.8em;
-    border: 1px solid #D8D8D8;
-    background: #ffffff;
-    border-radius: 1em;
-  }
-  .detail .alter button{
-    position: absolute;
-    right: 0;
-    top: 25%;
-    width: 20%;
-    height: 50%;
-    background: #ffffff;
-    border: 1px solid #363E42;
-    border-radius: 13px;
-  }
+
   .detail .button{
     position: absolute;
     top: 92%;

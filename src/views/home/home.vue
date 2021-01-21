@@ -315,7 +315,7 @@ export default {
   }
 }
 </script>
-<style scoped>
+<style scoped lang="scss" >
   .home{
     position: fixed;
     top: 0;
